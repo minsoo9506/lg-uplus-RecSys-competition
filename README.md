@@ -8,16 +8,25 @@
     - hp tuning
     - mlflow
     - 성능과 속도 고도화 tip
+    - torch 모델 시각화
 
 # 진행 과정
 
-### 일단 가장 간단하게 baseline model을 만들기
+### DeepFM baseline
 
-- `history.drop_duplicates(['profile_id','album_id'])`으로 진행
+- `history.drop_duplicates(['profile_id','log_time','album_id'])`으로 진행
 - `meta`데이터에서 `sub_title`, `genre_(large, mid)` 컬럼 사용
 - `profile`데이터 사용
 
-### 그 이후 추가적으로 feature 추가해보기 (컨텐츠 시청시간, 컨텐츠 시청횟수 등)
+### 그 이후 추가적으로 feature 추가해보기 (컨텐츠 시청시간, 컨텐츠 시청횟수)
+
+### Boosting 모델 사용
+
+### 모델 성능
+
+|      Model       | 성능지표1 | 성능지표2 |
+| :--------------: | :-------: | :-------: |
+| DeepFM(baseline) |     0     |     0     |
 
 # Reference
 
