@@ -8,3 +8,6 @@ __pycache__
 .python-version
 
 .env
+
+data
+example_code
