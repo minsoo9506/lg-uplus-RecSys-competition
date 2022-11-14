@@ -1,19 +1,15 @@
 import argparse
 
+import mlflow
+import mlflow.pytorch
 import pandas as pd
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-from data_load.data_DeepFM import (
-    DeepFMMakeBaselineData,
-    DeepFMTrainTestSplit,
-    DeepFMDataset,
-)
+from data_load.data_DeepFM import (DeepFMDataset, DeepFMMakeBaselineData,
+                                   DeepFMTrainTestSplit)
 from lit_model.DeepFM_lit_model import DeepFMLitModel
 from model.DeepFM import DeepFM
-
-import mlflow.pytorch
-from mlflow import MlflowClient
 
 
 def define_argparser():
@@ -99,12 +95,19 @@ def main(config):
     early_stopping_callback = pl.callbacks.EarlyStopping(
         monitor="validation/loss", mode="min", patience=20
     )
+    checkpoint_callback = pl.callbacks.ModelCheckpoint(
+        monitor="validation/loss",
+        dirpath="../save_models/",
+        filename="DeepFM-{epoch:02d}-{validation/loss:.2f}",
+        save_on_train_epoch_end=True,
+    )
+
     trainer = pl.Trainer(
         log_every_n_steps=10,  # set the logging frequency
         gpus=config.cuda,
         max_epochs=config.epochs,  # number of epochs
         deterministic=True,  # keep it deterministic
-        callbacks=[early_stopping_callback],
+        callbacks=[early_stopping_callback, checkpoint_callback],
     )
 
     # mlflow
