@@ -2,7 +2,6 @@ import argparse
 
 import pandas as pd
 import pytorch_lightning as pl
-import torch
 from torch.utils.data import DataLoader
 
 from data_load.data_DeepFM import (
@@ -13,11 +12,18 @@ from data_load.data_DeepFM import (
 from lit_model.DeepFM_lit_model import DeepFMLitModel
 from model.DeepFM import DeepFM
 
+import mlflow.pytorch
+from mlflow import MlflowClient
+
 
 def define_argparser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--project", default="DeepFM")
+    parser.add_argument("--cuda", type=int, default=0, help="0 for cpu -1 for all gpu")
+    parser.add_argument(
+        "--epochs", type=int, default=10, help="number of epochs to train (default: 3)"
+    )
     parser.add_argument(
         "--batch_size",
         type=int,
@@ -36,13 +42,13 @@ def define_argparser():
         help="mlp hidden layers' dimensions (default: [16, 16])",
     )
     parser.add_argument(
-        "--epochs", type=int, default=10, help="number of epochs to train (default: 3)"
+        "--neg_ratio",
+        type=int,
+        default=1,
+        help="negative sampling ratio againt positive samples for each user (default: 1)",
     )
-    parser.add_argument("--cuda", type=int, default=0, help="0 for cpu -1 for all gpu")
-    config = parser.parse_args()
-    if config.cuda == 0 or torch.cuda.is_available() is False:
-        config.cuda = 0
 
+    config = parser.parse_args()
     return config
 
 
@@ -55,23 +61,24 @@ def main(config):
 
     # split train, valid
     TEST_RATIO = 0.2
-    split_train_valid = DeepFMTrainTestSplit(
+    train_valid_spliter = DeepFMTrainTestSplit(
         data=data, test_size=TEST_RATIO, random_seed=0
     )
-    train, valid = split_train_valid.split()
+    train, valid = train_valid_spliter.split()
 
     # train_dataset with negative sampling
     train_dataset = DeepFMDataset(
         data=train,
         is_train=True,
-        DeepFMTrainTestSplit=split_train_valid,
+        DeepFMTrainTestSplit=train_valid_spliter,
         unique_item=unique_item,
-        neg_ratio=1,  # neg_ratio -> config에 추가하기
+        neg_ratio=1,
         meta_use=meta_use,
         profile_use=profile_use,
     )
+    # valid_dataset without negative sampling
     valid_dataset = DeepFMDataset(
-        valid, is_train=False, DeepFMTrainTestSplit=split_train_valid
+        data=valid, is_train=False, DeepFMTrainTestSplit=train_valid_spliter
     )
 
     # loader
@@ -89,14 +96,12 @@ def main(config):
     DeepFM_lit_model = DeepFMLitModel(DeepFM_model, config)
 
     # trainer
-    # logger = pl.loggers.WandbLogger()
     early_stopping_callback = pl.callbacks.EarlyStopping(
         monitor="validation/loss", mode="min", patience=20
     )
     trainer = pl.Trainer(
-        # logger=logger,
         log_every_n_steps=10,  # set the logging frequency
-        gpus=config.cuda,  # use all GPUs
+        gpus=config.cuda,
         max_epochs=config.epochs,  # number of epochs
         deterministic=True,  # keep it deterministic
         callbacks=[early_stopping_callback],
