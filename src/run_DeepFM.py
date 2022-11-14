@@ -107,8 +107,12 @@ def main(config):
         callbacks=[early_stopping_callback],
     )
 
-    # fit the model
-    trainer.fit(DeepFM_lit_model, train_loader, valid_loader)
+    # mlflow
+    mlflow.pytorch.autolog()
+
+    # Train the model
+    with mlflow.start_run() as run:
+        trainer.fit(DeepFM_lit_model, train_loader, valid_loader)
 
 
 if __name__ == "__main__":
