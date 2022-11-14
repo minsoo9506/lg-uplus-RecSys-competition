@@ -37,24 +37,6 @@ class DeepFMLitModel(pl.LightningModule):
         self.val_acc = Accuracy()
         self.test_acc = Accuracy()
 
-    # @staticmethod
-    # def add_to_argparse(parser):
-    #     parser.add_argument(
-    #         "--optimizer",
-    #         type=str,
-    #         default=OPTIMIZER,
-    #         help="optimizer class from torch.optim",
-    #     )
-    #     parser.add_argument("--lr", type=float, default=LR)
-    #     parser.add_argument("--one_cycle_max_lr", type=float, default=None)
-    #     parser.add_argument(
-    #         "--loss",
-    #         type=str,
-    #         default=LOSS,
-    #         help="loss function from torch.nn.functional",
-    #     )
-    #     return parser
-
     def configure_optimizers(self) -> Dict[str, Any]:
         """set optimizer
 
@@ -168,5 +150,5 @@ class DeepFMLitModel(pl.LightningModule):
         y, preds, loss = self._run_on_batch(batch)
         self.test_acc(preds, y)
 
-        self.log("test/loss", loss, on_step=False, on_epoch=True)
-        self.log("test/acc", self.valid_acc, on_step=False, on_epoch=True)
+        self.log("test/loss", loss, prog_bar=True, sync_dist=True)
+        self.log("test/acc", self.test_acc, on_step=False, on_epoch=True)
