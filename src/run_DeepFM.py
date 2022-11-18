@@ -6,8 +6,11 @@ import pandas as pd
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-from data_load.data_DeepFM import (DeepFMDataset, DeepFMMakeBaselineData,
-                                   DeepFMTrainTestSplit)
+from data_load.data_DeepFM import (
+    DeepFMDataset,
+    DeepFMMakeBaselineData,
+    DeepFMTrainTestSplit,
+)
 from lit_model.DeepFM_lit_model import DeepFMLitModel
 from model.DeepFM import DeepFM
 
@@ -18,7 +21,7 @@ def define_argparser():
     parser.add_argument("--project", default="DeepFM")
     parser.add_argument("--cuda", type=int, default=0, help="0 for cpu -1 for all gpu")
     parser.add_argument(
-        "--epochs", type=int, default=10, help="number of epochs to train (default: 3)"
+        "--epochs", type=int, default=3, help="number of epochs to train (default: 3)"
     )
     parser.add_argument(
         "--batch_size",
@@ -49,6 +52,7 @@ def define_argparser():
 
 
 def main(config):
+    print("Load data!")
     history = pd.read_csv("../data/history_data.csv")
     meta = pd.read_csv("../data/meta_data.csv")
     profile = pd.read_csv("../data/profile_data.csv")
@@ -56,12 +60,14 @@ def main(config):
     unique_item = data["album_id"].unique()
 
     # split train, valid
+    print("Split data!")
     TEST_RATIO = 0.2
     train_valid_spliter = DeepFMTrainTestSplit(
         data=data, test_size=TEST_RATIO, random_seed=0
     )
     train, valid = train_valid_spliter.split()
 
+    print("Make dataset!")
     # train_dataset with negative sampling
     train_dataset = DeepFMDataset(
         data=train,
@@ -77,10 +83,12 @@ def main(config):
         data=valid, is_train=False, DeepFMTrainTestSplit=train_valid_spliter
     )
 
+    print("Make DataLoader!")
     # loader
     train_loader = DataLoader(train_dataset, batch_size=config.batch_size)
     valid_loader = DataLoader(valid_dataset, batch_size=config.batch_size)
 
+    print("Train model!")
     # model
     DeepFM_model = DeepFM(
         field_dims=train_dataset.field_dims,
@@ -95,11 +103,12 @@ def main(config):
     early_stopping_callback = pl.callbacks.EarlyStopping(
         monitor="validation/loss", mode="min", patience=20
     )
+    ## save_models라는 폴더에 DeepFM-epoch={epoch}-validation 라는 폴더가 생성되고 그 안에 loss={validation/loss}.ckpt 파일 생성
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         monitor="validation/loss",
         dirpath="../save_models/",
         filename="DeepFM-{epoch:02d}-{validation/loss:.2f}",
-        save_on_train_epoch_end=True,
+        save_on_train_epoch_end=True,  # epoch 끝날때마다 저장
     )
 
     trainer = pl.Trainer(
