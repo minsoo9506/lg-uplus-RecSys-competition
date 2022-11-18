@@ -11,3 +11,9 @@ __pycache__
 
 data
 example_code
+
+mlruns
+
+save_models
+
+lightning_logs

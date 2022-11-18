@@ -40,6 +40,13 @@
         trainer.fit(DeepFM_lit_model, train_loader, valid_loader)
 ```
 
+- 그리고 실행하면 `mlruns`라는 파일이 생긴다.
+- terminal에서 `mlflow ui` 명령어를 치면 아래와 같은 화면을 확인할 수 있다.
+
+![mlflow_ui](./images/mlflow_ui.png)
+
+- 그리고 각 실험에 들어가면 metrics, artifacts 등을 쉽게 확인할 수 있다.
+
 ### NDCG@K
 
 - 1에 가까울수록 좋다.
@@ -60,9 +67,9 @@ $$NDCG_K = \frac{DCG}{IDCG}$$
 
 ### 모델 성능
 
-|      Model       | 성능지표1 | 성능지표2 |
-| :--------------: | :-------: | :-------: |
-| DeepFM(baseline) |     0     |     0     |
+|      Model       | Recall@K | NDCG@K |
+| :--------------: | :------: | :----: |
+| DeepFM(baseline) |    0     |   0    |
 
 # Reference
 
