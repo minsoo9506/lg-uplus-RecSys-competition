@@ -53,7 +53,7 @@ def DeepFMMakeBaselineData(
         history_meta, profile_use, on="profile_id", how="left"
     )
     # 시청 여부 추가
-    history_meta_profile["ratings"] = 1
+    history_meta_profile["ratings"] = 1.0
 
     return history_meta_profile, meta_use, profile_use
 
@@ -204,8 +204,8 @@ class DeepFMDataset(Dataset):
 
         final_data = final_data.to_numpy()
         final_data = final_data.astype(np.intc)
-        self.inputs = self.final_data[:, :-1]
-        self.targets = self.final_data[:, -1]
+        self.inputs = final_data[:, :-1]
+        self.targets = final_data[:, -1].astype(np.float32)
         self.field_dims = np.max(self.inputs, axis=0) + 1
 
     def __len__(self):
@@ -263,7 +263,7 @@ class DeepFMDataset(Dataset):
             neg_samples_df.iloc[idx : idx + n_neg_samples, 4:-1] = profile_use.loc[
                 profile_use["profile_id"] == id, "sex":
             ].values
-            neg_samples_df.iloc[idx : idx + n_neg_samples, -1] = 0
+            neg_samples_df.iloc[idx : idx + n_neg_samples, -1] = 0.0
             # idx 수정
             idx += n_neg_samples
 
