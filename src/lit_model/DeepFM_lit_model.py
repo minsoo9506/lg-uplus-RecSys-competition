@@ -34,7 +34,7 @@ class DeepFMLitModel(pl.LightningModule):
         self.loss_fn = getattr(torch.nn, loss)()
 
         self.train_acc = Accuracy()
-        self.val_acc = Accuracy()
+        self.valid_acc = Accuracy()
         self.test_acc = Accuracy()
 
     def configure_optimizers(self) -> Dict[str, Any]:
@@ -62,8 +62,14 @@ class DeepFMLitModel(pl.LightningModule):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)
 
-    def predict(self, x: torch.Tensor) -> torch.Tensor:
-        preds = self.model(x)
+    # trainer.predict 로 사용
+    def predict_step(
+        self,
+        batch: Tuple[torch.Tensor, torch.Tensor],
+        batch_idx: int,
+        dataloader_idx: int,
+    ) -> torch.Tensor:
+        preds = self.model(batch)
         return preds
 
     def _run_on_batch(
@@ -82,7 +88,7 @@ class DeepFMLitModel(pl.LightningModule):
             y label, y pred, loss
         """
         x, y = batch
-        preds = self(x)
+        preds = self.model(x)
         loss = self.loss_fn(preds, y)
 
         return y, preds, loss
@@ -105,10 +111,10 @@ class DeepFMLitModel(pl.LightningModule):
             {"loss": loss}
         """
         y, preds, loss = self._run_on_batch(batch)
-        self.train_acc(preds, y)
+        # self.train_acc(preds, y)
 
         self.log("train/loss", loss)
-        self.log("train/acc", self.train_acc, on_step=False, on_epoch=True)
+        # self.log("train/acc", self.train_acc, on_step=False, on_epoch=True)
 
         return {"loss": loss}
 
@@ -130,10 +136,10 @@ class DeepFMLitModel(pl.LightningModule):
             {"loss": loss}
         """
         y, preds, loss = self._run_on_batch(batch)
-        self.valid_acc(preds, y)
+        # self.valid_acc(preds, y)
 
         self.log("validation/loss", loss, prog_bar=True, sync_dist=True)
-        self.log("validation/acc", self.valid_acc, on_step=False, on_epoch=True)
+        # self.log("validation/acc", self.valid_acc, on_step=False, on_epoch=True)
 
         return {"loss": loss}
 
@@ -148,7 +154,7 @@ class DeepFMLitModel(pl.LightningModule):
             batch index
         """
         y, preds, loss = self._run_on_batch(batch)
-        self.test_acc(preds, y)
+        # self.test_acc(preds, y)
 
         self.log("test/loss", loss, prog_bar=True, sync_dist=True)
-        self.log("test/acc", self.test_acc, on_step=False, on_epoch=True)
+        # self.log("test/acc", self.test_acc, on_step=False, on_epoch=True)

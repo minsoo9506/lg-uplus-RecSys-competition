@@ -23,7 +23,7 @@ class FMLinear(nn.Module):
         super().__init__()
 
         self.fc = nn.Embedding(sum(field_dims), output_dim)
-        self.bias = nn.parameter(torch.zeros((output_dim,)))
+        # self.bias = nn.parameter(torch.zeros((output_dim,)))
         self.offsets = np.array(
             (0, *np.cumsum(field_dims)[:-1]), dtype=np.int_
         )  # 새로운 종류의 field가 시작하는 index
@@ -55,7 +55,7 @@ class FMLinear(nn.Module):
         # 여기서 num_fields는 각 종류의 field안에서 user, item의 각 index
         # 그래서 offset을 더해줘야 embedding layer에서 원하는 weight를 뽑아낼 수 있다
         x = x + x.new_tensor(self.offsets).unsqueeze(0)
-        return torch.sum(self.fc(x), dim=1) + self.bias
+        return torch.sum(self.fc(x), dim=1)  # + self.bias
 
 
 class FeatureEmbedding(nn.Module):
