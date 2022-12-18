@@ -6,11 +6,8 @@ import pandas as pd
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-from data_load.data_DeepFM import (
-    DeepFMDataset,
-    DeepFMMakeBaselineData,
-    DeepFMTrainTestSplit,
-)
+from data_load.data_DeepFM import (DeepFMDataset, DeepFMMakeBaselineData,
+                                   DeepFMTrainTestSplit)
 from lit_model.DeepFM_lit_model import DeepFMLitModel
 from model.DeepFM import DeepFM
 
